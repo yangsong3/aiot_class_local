@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pi Lab · 센서 제어</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script src="{{ url_for('static', filename='app.js') }}" defer></script>
+</head>
+<body>
+  <main>
+    <header><a class="brand" href="/">◈ <span>Pi Lab</span></a><span class="badge">{{ '모의 실습' if state.mock else '라즈베리파이 실습' }}</span></header>
+    <section class="intro">
+      <p class="eyebrow">RASPBERRY PI · GPIO LAB</p>
+      <p class="description">LED를 켜고 버튼을 눌러보세요.<br>웹과 연결된 장치의 변화를 바로 확인할 수 있습니다.</p>
+    </section>
+    <div class="statusbar"><span id="connection" role="status">장치에 연결 중…</span><span>BCM 모드 · 0.5초 간격</span></div>
+    <section class="devices" aria-label="장치 제어">
+      <article class="card">
+        <div class="card-top"><span class="eyebrow">01 / OUTPUT</span><span class="pin">BCM {{ state.led_pin }}</span></div>
+        <div class="indicator led" id="led-light" aria-hidden="true">☼</div>
+        <h2>LED</h2><p class="hint">스위치로 빛을 제어하세요.</p>
+        <div class="reading"><span>현재 상태</span><strong id="led-state">확인 중</strong></div>
+        <div class="actions"><button id="led-on" disabled>켜기</button><button id="led-off" class="secondary" disabled>끄기</button></div>
+      </article>
+      <article class="card">
+        <div class="card-top"><span class="eyebrow">02 / INPUT</span><span class="pin">BCM {{ state.button_pin }}</span></div>
+        <div class="indicator input" id="button-light" aria-hidden="true">◎</div>
+        <h2>버튼</h2><p class="hint">{{ '모의 버튼으로 입력을 바꿔보세요.' if state.mock else '연결된 버튼을 눌러 입력을 확인하세요.' }}</p>
+        <div class="reading"><span>현재 상태</span><strong id="button-state">확인 중</strong></div>
+        {% if state.mock %}<button id="mock-button" class="secondary full" aria-pressed="false" disabled>모의 버튼 누르기</button>{% else %}<div class="input-note">버튼 입력을 자동으로 읽고 있습니다.</div>{% endif %}
+      </article>
+    </section>
+    <p id="error" role="alert" hidden></p>
+    <aside><span class="note-icon">↳</span><div><strong>{{ '실제 장치 없이 연습하고 있어요.' if state.mock else '배선을 확인하세요.' }}</strong><p>{{ '화면의 상태는 모의 값입니다. 실제 GPIO를 제어하려면 --mock 없이 실행하세요.' if state.mock else 'LED는 저항을 거쳐 연결하고, 버튼은 지정한 BCM 핀과 GND 사이에 연결하세요.' }}</p></div></aside>
+    <footer><span>Pi Lab / 센서 제어 실습</span><span>Python + Flask</span></footer>
+  </main>
+</body>
+</html>

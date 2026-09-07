@@ -1,0 +1,16 @@
+.venv
+venv
+
+.env
+
+.cache
+.pycache
+__pycache__/
+*.pyc
+pi-lab.zip
+
+AGENTS.md
+
+gpio_control.py
+README.md
+
