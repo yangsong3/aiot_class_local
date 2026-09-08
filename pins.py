@@ -1,4 +1,10 @@
-"""배선에 맞게 이 파일만 수정하세요. 모든 번호는 BCM 기준입니다."""
+"""GPIO.BCM 기준 PIN 번호"""
 
-LED_PIN: int = 17
-BUTTON_PIN: int = 27
+LED_PIN: int = 22
+BUTTON_PIN: int = 17
+DC_MOTOR_L_PIN: int = 13 # CCW(L)M
+DC_MOTOR_R_PIN: int = 19 # CW(R)P
+HUMIDITY_TEMPERATURE_PIN: int = 27
+ULTRASONIC_ECHO_PIN: int = 24
+ULTRASONIC_TRIG_PIN: int = 23
+

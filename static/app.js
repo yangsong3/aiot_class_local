@@ -1,59 +1,41 @@
-const byId = (id) => document.getElementById(id);
-let currentState = null;
+const get = (id) => document.getElementById(id);
 let busy = false;
 
+function value(number, digits = 1) { return number == null ? '--' : Number(number).toFixed(digits); }
 function render(state) {
-  currentState = state;
-  byId('led-state').textContent = state.led ? '켜짐' : '꺼짐';
-  byId('button-state').textContent = state.button ? '눌림' : '대기';
-  byId('led-light').classList.toggle('active', state.led);
-  byId('button-light').classList.toggle('active', state.button);
-  byId('led-on').disabled = state.led;
-  byId('led-off').disabled = !state.led;
-  const mockButton = byId('mock-button');
-  if (mockButton) {
-    mockButton.disabled = false;
-    mockButton.textContent = state.button ? '모의 버튼 놓기' : '모의 버튼 누르기';
-    mockButton.setAttribute('aria-pressed', String(state.button));
-  }
-  byId('connection').textContent = state.mock ? '● 모의 장치 연결됨' : '● 장치 연결됨';
-  byId('error').hidden = true;
+  get('led-state').textContent = state.led ? '켜짐' : '꺼짐';
+  get('led-icon').classList.toggle('active', state.led);
+  const motorText = { forward: '정회전', reverse: '역회전', stop: '정지' };
+  get('motor-state').textContent = motorText[state.motor];
+  get('motor-icon').classList.toggle('spinning', state.motor !== 'stop');
+  get('motor-icon').classList.toggle('reverse', state.motor === 'reverse');
+  get('temperature').textContent = value(state.temperature);
+  get('humidity').textContent = value(state.humidity);
+  get('distance').textContent = value(state.distance);
+  get('ultrasonic-state').textContent = state.ultrasonic_on ? '측정 중' : '꺼짐';
+  get('connection').textContent = state.mock ? '● 모의 장치 연결됨' : '● Raspberry Pi 연결됨';
+  get('error').hidden = true;
 }
-
-async function sync(device, on) {
+async function request(path = '/api/state', body) {
   if (busy) return;
   busy = true;
-  document.querySelectorAll('button').forEach((button) => { button.disabled = true; });
   try {
-    const response = await fetch(device ? `/api/${device}` : '/api/state', {
-      method: device ? 'POST' : 'GET',
-      headers: device ? { 'Content-Type': 'application/json' } : {},
-      body: device ? JSON.stringify({ on }) : undefined,
-      cache: 'no-store',
-      signal: AbortSignal.timeout(5000),
-    });
+    const response = await fetch(path, {method: body ? 'POST' : 'GET', headers: body ? {'Content-Type':'application/json'} : {}, body: body ? JSON.stringify(body) : undefined, cache:'no-store'});
     const data = await response.json();
-    if (!response.ok) throw new Error(data.error || '장치 요청에 실패했습니다.');
+    if (!response.ok) throw new Error(data.error || '요청에 실패했습니다.');
     render(data);
   } catch (error) {
-    byId('connection').textContent = '○ 연결 확인 필요';
-    byId('led-state').textContent = '확인 불가';
-    byId('button-state').textContent = '확인 불가';
-    byId('led-light').classList.remove('active');
-    byId('button-light').classList.remove('active');
-    byId('error').textContent = `${error.message} 서버 연결을 확인하세요. 자동으로 다시 연결합니다.`;
-    byId('error').hidden = false;
-  } finally {
-    busy = false;
-  }
+    get('connection').textContent = '● 연결 확인 필요';
+    get('error').textContent = `${error.message} 서버 연결을 확인하세요.`;
+    get('error').hidden = false;
+  } finally { busy = false; }
 }
-
-byId('led-on').addEventListener('click', () => sync('led', true));
-byId('led-off').addEventListener('click', () => sync('led', false));
-byId('mock-button')?.addEventListener('click', () => sync('button', !currentState.button));
-
+document.querySelectorAll('[data-led]').forEach((button) => button.addEventListener('click', () => request('/api/led', {on: button.dataset.led === 'true'})));
+document.querySelectorAll('[data-motor]').forEach((button) => button.addEventListener('click', () => request('/api/motor', {direction: button.dataset.motor})));
+document.querySelectorAll('[data-ultrasonic]').forEach((button) => button.addEventListener('click', () => request('/api/ultrasonic', {on: button.dataset.ultrasonic === 'true'})));
 async function poll() {
-  await sync();
-  window.setTimeout(poll, 500);
+  await request();
+  const interval = get('connection').textContent.includes('모의') ? 30000 : 2000;
+  window.setTimeout(poll, interval);
 }
 poll();
